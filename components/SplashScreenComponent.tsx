@@ -12,38 +12,61 @@ const SplashScreenComponent = () => {
   const navigation = useNavigation();
 
   // Shared values for animations
-  const opacity = useSharedValue(0); // Opacity starts at 0 (invisible)
-  const translateY = useSharedValue(50); // Y position starts slightly off-screen
+  const logoOpacity = useSharedValue(0);
+  const logoTranslateY = useSharedValue(50);
+  const textOpacity = useSharedValue(0);
+  const textTranslateY = useSharedValue(50);
 
   useEffect(() => {
-    // Start animation
-    opacity.value = withTiming(1, { duration: 2000, easing: Easing.ease });
-    translateY.value = withTiming(0, {
+    // Animate logo first
+    logoOpacity.value = withTiming(1, { duration: 2000, easing: Easing.ease });
+    logoTranslateY.value = withTiming(0, {
       duration: 2000,
       easing: Easing.out(Easing.cubic),
     });
 
-    // Navigate to the next screen after 3 seconds
+    // Animate text after logo animation
+    textOpacity.value = withTiming(1, { duration: 2000, easing: Easing.ease });
+    textTranslateY.value = withTiming(0, {
+      duration: 2000,
+      easing: Easing.out(Easing.cubic),
+      delay: 1000, // Delay text animation for smooth effect
+    });
+
+    // Navigate to the next screen after 6 seconds
     const timeout = setTimeout(() => {
-      (navigation as any).navigation.navigate("index"); // Replace Splash screen with Home
+      navigation.navigate("index"); // Navigate to the home screen or another page
     }, 6000);
 
     return () => clearTimeout(timeout); // Cleanup timeout if component unmounts
   }, []);
 
-  // Animated styles
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
+  // Animated styles for logo
+  const logoAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [{ translateY: logoTranslateY.value }],
+  }));
+
+  // Animated styles for text
+  const textAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+    transform: [{ translateY: textTranslateY.value }],
   }));
 
   return (
     <View style={styles.container}>
-      {/* Animated Text with Emojis */}
-      <Animated.View style={animatedStyle}>
-        <Text style={styles.emoji}>🚀</Text>
-        <Text style={styles.text}>Welcome to PNG's One and Only</Text>
-        <Text style={styles.emoji}>✨🎉</Text>
+      {/* Animated Logo */}
+      <Animated.View style={logoAnimatedStyle}>
+        <Image
+          source={require("@/assets/images/download.jpeg")} // Ensure the image path is correct
+          style={styles.logo}
+        />
+      </Animated.View>
+
+      {/* Animated Text */}
+      <Animated.View style={textAnimatedStyle}>
+        <Text style={styles.title}>PNG CENSUS</Text>
+        <Text style={styles.subtitle}>Collect, Share, and Inspire</Text>
       </Animated.View>
     </View>
   );
@@ -53,20 +76,28 @@ const SplashScreenComponent = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#4CAF50", // Green background color for a modern splash
+    backgroundColor: "#FFFFFF", // White background color
     justifyContent: "center",
     alignItems: "center",
   },
-  text: {
-    fontSize: 32,
+  logo: {
+    width: 250, // Adjust logo size
+    height: 150,
+    resizeMode: "contain", // Maintain aspect ratio of the logo
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 30,
     fontWeight: "bold",
-    color: "#fff", // White text for contrast
+    color: "#00BFFF", // Match the color scheme of PNG Census
     textAlign: "center",
     marginTop: 10,
   },
-  emoji: {
-    fontSize: 64, // Large emoji size
+  subtitle: {
+    fontSize: 18,
+    color: "#808080", // Subtitle color
     textAlign: "center",
+    marginTop: 5,
   },
 });
 

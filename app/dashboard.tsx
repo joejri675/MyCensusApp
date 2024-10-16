@@ -6,33 +6,28 @@ import {
   Button,
   StyleSheet,
   Platform,
-  FlatList,
-  Alert,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import {
-  addPerson,
-  getPersons,
-  updatePerson,
-  deletePerson,
-  initializeDB,
-  Person,
-} from "@/database"; // Import initializeDB
+import { addPerson, getPersons, updatePerson, deletePerson, initializeDB, Person } from "@/database"; 
 
 const Dashboard = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [llg, setLlg] = useState("");
+  const [ward, setWard] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("Select Gender");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [persons, setPersons] = useState<Person[]>([]);
-  const [selectedPerson, setSelectedPerson] = useState<number | null>(null);
-  const [editingPersonId, setEditingPersonId] = useState<number | null>(null); // Track if updating a person
+  const [editingPersonId, setEditingPersonId] = useState<number | null>(null);
 
   const onChangeDate = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
@@ -55,127 +50,107 @@ const Dashboard = () => {
   }, []);
 
   const handleSubmit = async () => {
-    if (
-      !firstName ||
-      !lastName ||
-      !phone ||
-      !email ||
-      gender === "Select Gender"
-    ) {
+    if (!firstName || !lastName || !province || gender === "Select Gender") {
       Alert.alert("Error", "Please fill in all fields correctly.");
       return;
     }
 
     try {
       if (editingPersonId) {
-        // Update existing person
-        await updatePerson(
-          editingPersonId,
-          firstName,
-          lastName,
-          phone,
-          email,
-          date.toISOString(),
-          gender
-        );
+        await updatePerson(editingPersonId, firstName, lastName, phone, email, province, date.toISOString(), gender);
         console.log("Person updated successfully");
       } else {
-        // Add new person
-        const id = await addPerson(
-          firstName,
-          lastName,
-          phone,
-          email,
-          date.toISOString(),
-          gender
-        );
+        const id = await addPerson(firstName, lastName, phone, email, province, date.toISOString(), gender);
         console.log("Person created successfully with ID:", id);
       }
       resetForm();
-      fetchPersons(); // Refresh the list
+      fetchPersons();
     } catch (error) {
       console.error("Error submitting person:", error);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deletePerson(id);
-      console.log("Person deleted successfully");
-      fetchPersons(); // Refresh the list after deleting
-    } catch (error) {
-      console.error("Error deleting person:", error);
-    }
-  };
-
-  const handleUpdateClick = (person: Person) => {
-    // Populate the form with the selected person's data
-    setFirstName(person.firstName);
-    setLastName(person.lastName);
-    setPhone(person.phone);
-    setEmail(person.email);
-    setGender(person.gender);
-    setDate(new Date(person.date)); // Assuming dateOfBirth is a string
-    setEditingPersonId(person.id); // Set the ID for updating
-  };
-
   const resetForm = () => {
-    // Clear the form after submission or update
     setFirstName("");
     setLastName("");
     setPhone("");
     setEmail("");
+    setProvince("");
+    setDistrict("");
+    setLlg("");
+    setWard("");
     setGender("Select Gender");
     setDate(new Date());
-    setEditingPersonId(null); // Reset ID for creating new entries
+    setEditingPersonId(null);
   };
 
   return (
     <ScrollView>
       <View style={styles.container}>
-        <Text style={styles.header}>Data Entry Form</Text>
+        {/* Census Data Entry Header */}
+        <Text style={styles.header}>Census Data Entry</Text>
 
+        {/* Province, District, LLG, Ward Inputs */}
         <TextInput
           style={styles.input}
-          placeholder="First Name"
-          value={firstName}
-          onChangeText={setFirstName}
+          placeholder="Province"
+          value={province}
+          onChangeText={setProvince}
+          placeholderTextColor="#888"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="District"
+          value={district}
+          onChangeText={setDistrict}
+          placeholderTextColor="#888"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Local Level Government (LLG)"
+          value={llg}
+          onChangeText={setLlg}
+          placeholderTextColor="#888"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Ward"
+          value={ward}
+          onChangeText={setWard}
           placeholderTextColor="#888"
         />
 
+        {/* Household Info Section */}
+        <Text style={styles.subHeader}>Household Info</Text>
         <TextInput
           style={styles.input}
-          placeholder="Last Name"
-          value={lastName}
-          onChangeText={setLastName}
-          placeholderTextColor="#888"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={phone}
-          onChangeText={setPhone}
+          placeholder="Total Number of People"
           keyboardType="numeric"
           placeholderTextColor="#888"
         />
 
+        {/* Individual Member Information Section */}
+        <Text style={styles.subHeader}>Individual Member Information</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
+          placeholder="Name"
+          value={firstName}
+          onChangeText={setFirstName}
           placeholderTextColor="#888"
         />
-
+        <TextInput
+          style={styles.input}
+          placeholder="Relationship to Head of Household"
+          value={lastName}
+          onChangeText={setLastName}
+          placeholderTextColor="#888"
+        />
         <Picker
           selectedValue={gender}
           onValueChange={(itemValue) => setGender(itemValue)}
           style={styles.picker}
         >
-          <Picker.Item label={"Select Gender"} value="" />
+          <Picker.Item label="Select Gender" value="" />
           <Picker.Item label="Male" value="male" />
           <Picker.Item label="Female" value="female" />
           <Picker.Item label="Other" value="other" />
@@ -199,54 +174,21 @@ const Dashboard = () => {
           </Text>
         </View>
 
-        <Button
-          title={selectedPerson ? "Update" : "Submit"}
-          onPress={handleSubmit}
+        <TextInput
+          style={styles.input}
+          placeholder="Citizenship"
+          value={email}
+          onChangeText={setEmail}
+          placeholderTextColor="#888"
         />
 
-        {/* Table to display records */}
-        <View style={styles.tableContainer}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderText}>First Name</Text>
-            <Text style={styles.tableHeaderText}>Last Name</Text>
-            <Text style={styles.tableHeaderText}>Phone</Text>
-            <Text style={styles.tableHeaderText}>Email</Text>
-            <Text style={styles.tableHeaderText}>Gender</Text>
-            <Text style={styles.tableHeaderText}>Date of Birth</Text>
-            <Text style={styles.tableHeaderText}>Actions</Text>
-          </View>
-          {persons.map((person) => (
-            <View key={person.id} style={styles.tableRow}>
-              <Text style={styles.tableRowText}>{person.firstName}</Text>
-              <Text style={styles.tableRowText}>{person.lastName}</Text>
-              <Text style={styles.tableRowText}>{person.phone}</Text>
-              <Text style={styles.tableRowText}>{person.email}</Text>
-              <Text style={styles.tableRowText}>{person.gender}</Text>
-              <Text style={styles.tableRowText}>
-                {new Date(person.date).toDateString()}
-              </Text>
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={styles.updateButton}
-                  onPress={() => handleUpdateClick(person)}
-                >
-                  <Text style={styles.buttonText}>Update</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDelete(person.id)}
-                >
-                  <Text style={styles.buttonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
+        <Button title={editingPersonId ? "Update" : "Submit"} onPress={handleSubmit} />
       </View>
     </ScrollView>
   );
 };
 
+// Styling for a clean, readable layout
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -261,6 +203,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
   },
+  subHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 20,
+    marginBottom: 10,
+  },
   input: {
     height: 50,
     borderColor: "#ccc",
@@ -269,11 +218,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 20,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   picker: {
     height: 50,
@@ -289,45 +233,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-  personContainer: {
-    marginBottom: 20,
-  },
-  tableContainer: {
-    marginTop: 20,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#f1f1f1",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  tableHeaderText: {
-    flex: 1,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  tableRow: {
-    flexDirection: "row",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  tableRowText: {
-    flex: 1,
-    textAlign: "center",
-  },
-  actionButtons: {
-    flexDirection: "row",
-  },
-  updateButton: {
-    backgroundColor: "#4CAF50",
-    padding: 5,
-    borderRadius: 5,
-    marginRight: 5,
-  },
-  deleteButton: { backgroundColor: "#F44336", padding: 5, borderRadius: 5 },
-  buttonText: { color: "#fff", fontWeight: "bold" },
 });
 
 export default Dashboard;

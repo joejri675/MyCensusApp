@@ -10,11 +10,13 @@ export interface Person {
   email: string;
   date: string; // Consider using a Date type depending on your date format
   gender: string;
+  province: string;
 }
 
 export const initializeDB = async () => {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
+
     CREATE TABLE IF NOT EXISTS person (
       id INTEGER PRIMARY KEY NOT NULL,
       firstName TEXT NOT NULL,
@@ -24,19 +26,28 @@ export const initializeDB = async () => {
       date TEXT NOT NULL,
       gender TEXT NOT NULL
     );
+
   `);
 };
 
-export const addPerson = async (firstName: string, lastName: string, phone: string, email: string, date: string, gender: string) => {
+export const addPerson = async (firstName: string, lastName:
+   string, phone: string, email: string, date: string, gender: string) => {
   try {
-    const result = await db.runAsync('INSERT INTO person (firstName, lastName, phone, email, date, gender) VALUES (?, ?, ?, ?, ?, ?)', firstName, lastName, phone, email, date, gender);
+    const result = await db.runAsync('INSERT INTO person (firstName, lastName, phone, email, date, gender) VALUES (?, ?, ?, ?, ?, ?)', 
+      firstName, 
+      lastName, 
+      phone, 
+      email, 
+      date, 
+      gender);
     return result.lastInsertRowId;
   } catch (error) {
     console.error("Error adding person:", error);
   }
 };
 
-export const updatePerson = async (id: number, firstName: string, lastName: string, phone: string, email: string, date: string, gender: string) => {
+export const updatePerson = async (id: number, firstName: string, lastName:
+   string, phone: string, email: string, date: string, gender:  string) => {
   try {
     await db.runAsync('UPDATE person SET firstName = ?, lastName = ?, phone = ?, email = ?, date = ?, gender = ? WHERE id = ?', firstName, lastName, phone, email, date, gender, id);
   } catch (error) {
